@@ -1,11 +1,20 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
+import {
+  API,
+  DynamicPlatformPlugin,
+  Logger,
+  PlatformAccessory,
+  PlatformConfig,
+  Service,
+  Characteristic,
+} from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { AirConditionerPlatformAccessory } from './platformAccessory';
 
 export class HomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
-  public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
+  public readonly Characteristic: typeof Characteristic =
+    this.api.hap.Characteristic;
 
   public readonly accessories: PlatformAccessory[] = [];
 
@@ -13,7 +22,6 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
     public readonly log: Logger,
     public readonly config: PlatformConfig,
     public readonly api: API,
-
   ) {
     this.log.debug('Finished initializing platform:', this.config.name);
 
@@ -32,7 +40,7 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
   async discoverDevices() {
     const response = await fetch(`${this.config.BaseURL}/devices`, {
       headers: {
-        'Authorization': `Bearer ${this.config.AccessToken}`,
+        Authorization: `Bearer ${this.config.AccessToken}`,
       },
     });
 
@@ -46,8 +54,9 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
     for (const device of data.items) {
       const uuid = this.api.hap.uuid.generate(device.deviceId);
 
-      const capabilities = device.components[0].capabilities
-        .map((capability: { id: string }) => capability.id);
+      const capabilities = device.components[0].capabilities.map(
+        (capability: { id: string }) => capability.id,
+      );
 
       this.log.debug('Discovered device:', device.label, capabilities);
 
@@ -56,12 +65,21 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
         continue;
       }
 
-      const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+      const existingAccessory = this.accessories.find(
+        (accessory) => accessory.UUID === uuid,
+      );
 
       if (existingAccessory) {
-        this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+        this.log.info(
+          'Restoring existing accessory from cache:',
+          existingAccessory.displayName,
+        );
 
-        new AirConditionerPlatformAccessory(this, existingAccessory, capabilities);
+        new AirConditionerPlatformAccessory(
+          this,
+          existingAccessory,
+          capabilities,
+        );
       } else {
         this.log.info('Adding new accessory:', device.label);
 
@@ -71,15 +89,18 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
 
         new AirConditionerPlatformAccessory(this, accessory, capabilities);
 
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+          accessory,
+        ]);
       }
     }
   }
 
   doesDeviceSupportCapabilities(capabilities: string[]): boolean {
-    const supportedCapabilities = AirConditionerPlatformAccessory.supportedCapabilities;
+    const supportedCapabilities =
+      AirConditionerPlatformAccessory.supportedCapabilities;
 
-    return supportedCapabilities.every(capability => {
+    return supportedCapabilities.every((capability) => {
       this.log.debug('Checking if device supports capability:', capability);
 
       return capabilities.includes(capability);

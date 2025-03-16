@@ -7,27 +7,27 @@ enum AirConditionerMode {
   Cool = 'cool',
   Dry = 'dry',
   Heat = 'heat',
-  Wind = 'wind'
+  Wind = 'wind',
 }
 
 enum SwitchState {
   On = 'on',
-  Off = 'off'
+  Off = 'off',
 }
 
 enum TemperatureUnit {
   Celsius = 'C',
-  Farenheit = 'F'
+  Farenheit = 'F',
 }
 
 enum AirConditionerOptionalMode {
   WindFree = 'windFree',
-  Off = 'off'
+  Off = 'off',
 }
 
 enum AirConditionerDisplayState {
   On = 'Light_Off',
-  Off = 'Light_On'
+  Off = 'Light_On',
 }
 
 export class AirConditionerPlatformAccessory {
@@ -35,12 +35,11 @@ export class AirConditionerPlatformAccessory {
 
   private temperatureUnit: TemperatureUnit = TemperatureUnit.Celsius;
 
-  public static readonly supportedCapabilities =
-    [
-      'switch',
-      'airConditionerMode',
-      'thermostatCoolingSetpoint',
-    ];
+  public static readonly supportedCapabilities = [
+    'switch',
+    'airConditionerMode',
+    'thermostatCoolingSetpoint',
+  ];
 
   protected name: string;
   protected commandURL: string;
@@ -52,13 +51,25 @@ export class AirConditionerPlatformAccessory {
     private readonly accessory: PlatformAccessory,
     private readonly capabilities: string[],
   ) {
-
     this.name = accessory.context.device.label;
-    this.commandURL = this.platform.config.BaseURL + '/devices/' + accessory.context.device.deviceId + '/commands';
-    this.statusURL = this.platform.config.BaseURL + '/devices/' + accessory.context.device.deviceId + '/status';
-    this.healthURL = this.platform.config.BaseURL + '/devices/' + accessory.context.device.deviceId + '/health';
+    this.commandURL =
+      this.platform.config.BaseURL +
+      '/devices/' +
+      accessory.context.device.deviceId +
+      '/commands';
+    this.statusURL =
+      this.platform.config.BaseURL +
+      '/devices/' +
+      accessory.context.device.deviceId +
+      '/status';
+    this.healthURL =
+      this.platform.config.BaseURL +
+      '/devices/' +
+      accessory.context.device.deviceId +
+      '/health';
 
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
+    this.accessory
+      .getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Samsung')
       .setCharacteristic(this.platform.Characteristic.Model, 'WindFree')
       .setCharacteristic(this.platform.Characteristic.SerialNumber, '1.0.0');
@@ -67,36 +78,57 @@ export class AirConditionerPlatformAccessory {
       this.accessory.getService(this.platform.Service.Thermostat) ||
       this.accessory.addService(this.platform.Service.Thermostat);
 
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.label);
+    this.service.setCharacteristic(
+      this.platform.Characteristic.Name,
+      accessory.context.device.label,
+    );
 
-    this.service.getCharacteristic(this.platform.Characteristic.TemperatureDisplayUnits)
+    this.service
+      .getCharacteristic(this.platform.Characteristic.TemperatureDisplayUnits)
       .onGet(this.handleTemperatureDisplayUnitsGet.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.CurrentHeatingCoolingState)
+    this.service
+      .getCharacteristic(
+        this.platform.Characteristic.CurrentHeatingCoolingState,
+      )
       .onGet(this.handleCurrentHeatingCoolingStateGet.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState)
+    this.service
+      .getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState)
       .onGet(this.handleTargetHeatingCoolingStateGet.bind(this))
       .onSet(this.handleTargetHeatingCoolingStateSet.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+    this.service
+      .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
       .onGet(this.handleCurrentTemperatureGet.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.TargetTemperature)
+    this.service
+      .getCharacteristic(this.platform.Characteristic.TargetTemperature)
       .onGet(this.handleTargetTemperatureGet.bind(this))
       .onSet(this.handleTargetTemperatureSet.bind(this));
 
-    this.platform.log.debug('Optional WindFree Switch: ', this.platform.config.OptionalWindFreeSwitch);
+    this.platform.log.debug(
+      'Optional WindFree Switch: ',
+      this.platform.config.OptionalWindFreeSwitch,
+    );
     if (this.platform.config.OptionalWindFreeSwitch) {
       this.platform.log.debug('Adding WindFree Switch');
 
       const windFreeSwitchService =
-      this.accessory.getService('WindFree') ||
-      this.accessory.addService(this.platform.Service.Switch, 'WindFree', `windfree-${accessory.context.device.deviceId}`);
+        this.accessory.getService('WindFree') ||
+        this.accessory.addService(
+          this.platform.Service.Switch,
+          'WindFree',
+          `windfree-${accessory.context.device.deviceId}`,
+        );
 
-      windFreeSwitchService.setCharacteristic(this.platform.Characteristic.Name, 'WindFree');
+      windFreeSwitchService.setCharacteristic(
+        this.platform.Characteristic.Name,
+        'WindFree',
+      );
 
-      windFreeSwitchService.getCharacteristic(this.platform.Characteristic.On)
+      windFreeSwitchService
+        .getCharacteristic(this.platform.Characteristic.On)
         .onGet(this.handleWindFreeSwitchGet.bind(this))
         .onSet(this.handleWindFreeSwitchSet.bind(this));
     } else {
@@ -108,17 +140,28 @@ export class AirConditionerPlatformAccessory {
       }
     }
 
-    this.platform.log.debug('Optional Display Switch: ', this.platform.config.OptionalDisplaySwitch);
+    this.platform.log.debug(
+      'Optional Display Switch: ',
+      this.platform.config.OptionalDisplaySwitch,
+    );
     if (this.platform.config.OptionalDisplaySwitch) {
       this.platform.log.debug('Adding Display Switch');
 
       const displaySwitchService =
-      this.accessory.getService('Display') ||
-      this.accessory.addService(this.platform.Service.Switch, 'Display', `display-${accessory.context.device.deviceId}`);
+        this.accessory.getService('Display') ||
+        this.accessory.addService(
+          this.platform.Service.Switch,
+          'Display',
+          `display-${accessory.context.device.deviceId}`,
+        );
 
-      displaySwitchService.setCharacteristic(this.platform.Characteristic.Name, 'Display');
+      displaySwitchService.setCharacteristic(
+        this.platform.Characteristic.Name,
+        'Display',
+      );
 
-      displaySwitchService.getCharacteristic(this.platform.Characteristic.On)
+      displaySwitchService
+        .getCharacteristic(this.platform.Characteristic.On)
         .onGet(this.handleDisplaySwitchGet.bind(this))
         .onSet(this.handleDisplaySwitchSet.bind(this));
     } else {
@@ -135,8 +178,11 @@ export class AirConditionerPlatformAccessory {
     this.platform.log.debug('Triggered GET WindFreeSwitch');
 
     const deviceStatus = await this.getDeviceStatus();
-    const windFreeSwitchStatus = deviceStatus['custom.airConditionerOptionalMode'].acOptionalMode.value as AirConditionerOptionalMode;
-    const airConditionerMode = deviceStatus.airConditionerMode.airConditionerMode.value as AirConditionerMode;
+    const windFreeSwitchStatus = deviceStatus[
+      'custom.airConditionerOptionalMode'
+    ].acOptionalMode.value as AirConditionerOptionalMode;
+    const airConditionerMode = deviceStatus.airConditionerMode
+      .airConditionerMode.value as AirConditionerMode;
 
     if (airConditionerMode === AirConditionerMode.Auto) {
       this.platform.log.debug('WindFreeSwitch is not supported in Auto mode');
@@ -150,7 +196,8 @@ export class AirConditionerPlatformAccessory {
     this.platform.log.debug('Triggered SET WindFreeSwitch:', value);
 
     const deviceStatus = await this.getDeviceStatus();
-    const airConditionerMode = deviceStatus.airConditionerMode.airConditionerMode.value as AirConditionerMode;
+    const airConditionerMode = deviceStatus.airConditionerMode
+      .airConditionerMode.value as AirConditionerMode;
 
     if (airConditionerMode === AirConditionerMode.Auto) {
       this.platform.log.debug('WindFreeSwitch is not supported in Auto mode');
@@ -160,7 +207,7 @@ export class AirConditionerPlatformAccessory {
     const response = await fetch(this.commandURL, {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + this.platform.config.AccessToken,
+        Authorization: 'Bearer ' + this.platform.config.AccessToken,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -168,7 +215,9 @@ export class AirConditionerPlatformAccessory {
           {
             capability: 'custom.airConditionerOptionalMode',
             command: 'setAcOptionalMode',
-            arguments: value ? [AirConditionerOptionalMode.WindFree] : [AirConditionerOptionalMode.Off],
+            arguments: value
+              ? [AirConditionerOptionalMode.WindFree]
+              : [AirConditionerOptionalMode.Off],
           },
         ],
       }),
@@ -183,7 +232,8 @@ export class AirConditionerPlatformAccessory {
     this.platform.log.debug('Triggered GET DisplaySwitch');
 
     const deviceStatus = await this.getDeviceStatus();
-    const displaySwitchStatus = deviceStatus['samsungce.airConditionerLighting'].lighting.value;
+    const displaySwitchStatus =
+      deviceStatus['samsungce.airConditionerLighting'].lighting.value;
 
     return displaySwitchStatus === SwitchState.On;
   }
@@ -194,7 +244,7 @@ export class AirConditionerPlatformAccessory {
     const response = await fetch(this.commandURL, {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + this.platform.config.AccessToken,
+        Authorization: 'Bearer ' + this.platform.config.AccessToken,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -202,11 +252,16 @@ export class AirConditionerPlatformAccessory {
           {
             capability: 'execute',
             command: 'execute',
-            arguments: ['mode/vs/0', {
-              'x.com.samsung.da.options': [
-                value ? AirConditionerDisplayState.On : AirConditionerDisplayState.Off,
-              ],
-            }],
+            arguments: [
+              'mode/vs/0',
+              {
+                'x.com.samsung.da.options': [
+                  value
+                    ? AirConditionerDisplayState.On
+                    : AirConditionerDisplayState.Off,
+                ],
+              },
+            ],
           },
         ],
       }),
@@ -229,10 +284,14 @@ export class AirConditionerPlatformAccessory {
     this.platform.log.debug('Triggered GET CurrentHeatingCoolingState');
 
     const deviceStatus = await this.getDeviceStatus();
-    const currentHeatingCoolingState = this.platform.Characteristic.CurrentHeatingCoolingState;
-    const airConditionerSwitchStatus = deviceStatus.switch.switch.value as SwitchState;
-    const airConditionerMode = deviceStatus.airConditionerMode.airConditionerMode.value as AirConditionerMode;
-    const coolingSetpoint = deviceStatus.thermostatCoolingSetpoint.coolingSetpoint.value;
+    const currentHeatingCoolingState =
+      this.platform.Characteristic.CurrentHeatingCoolingState;
+    const airConditionerSwitchStatus = deviceStatus.switch.switch
+      .value as SwitchState;
+    const airConditionerMode = deviceStatus.airConditionerMode
+      .airConditionerMode.value as AirConditionerMode;
+    const coolingSetpoint =
+      deviceStatus.thermostatCoolingSetpoint.coolingSetpoint.value;
     const temperature = deviceStatus.temperatureMeasurement.temperature.value;
 
     this.platform.log.debug('CurrentHeatingCoolingState:', airConditionerMode);
@@ -242,7 +301,9 @@ export class AirConditionerPlatformAccessory {
     } else if (airConditionerMode === AirConditionerMode.Cool) {
       return currentHeatingCoolingState.COOL;
     } else if (airConditionerMode === AirConditionerMode.Auto) {
-      return temperature > coolingSetpoint ? currentHeatingCoolingState.COOL : currentHeatingCoolingState.HEAT;
+      return temperature > coolingSetpoint
+        ? currentHeatingCoolingState.COOL
+        : currentHeatingCoolingState.HEAT;
     } else if (airConditionerMode === AirConditionerMode.Heat) {
       return currentHeatingCoolingState.HEAT;
     } else {
@@ -254,9 +315,12 @@ export class AirConditionerPlatformAccessory {
     this.platform.log.debug('Triggered GET TargetHeatingCoolingState');
 
     const deviceStatus = await this.getDeviceStatus();
-    const airConditionerSwitchStatus = deviceStatus.switch.switch.value as SwitchState;
-    const targetHeatingCoolingState = this.platform.Characteristic.TargetHeatingCoolingState;
-    const airConditionerMode = deviceStatus.airConditionerMode.airConditionerMode.value as AirConditionerMode;
+    const airConditionerSwitchStatus = deviceStatus.switch.switch
+      .value as SwitchState;
+    const targetHeatingCoolingState =
+      this.platform.Characteristic.TargetHeatingCoolingState;
+    const airConditionerMode = deviceStatus.airConditionerMode
+      .airConditionerMode.value as AirConditionerMode;
 
     this.platform.log.debug('TargetHeatingCoolingState:', airConditionerMode);
 
@@ -276,9 +340,13 @@ export class AirConditionerPlatformAccessory {
   private async handleTargetHeatingCoolingStateSet(value: CharacteristicValue) {
     this.platform.log.debug('Triggered SET TargetHeatingCoolingState:', value);
 
-    const TargetHeatingCoolingState = this.platform.Characteristic.TargetHeatingCoolingState;
+    const TargetHeatingCoolingState =
+      this.platform.Characteristic.TargetHeatingCoolingState;
 
-    this.platform.log.debug('TargetHeatingCoolingState:', TargetHeatingCoolingState);
+    this.platform.log.debug(
+      'TargetHeatingCoolingState:',
+      TargetHeatingCoolingState,
+    );
 
     const targetHeatingCoolingStateToAirConditionerMode = () => {
       switch (value) {
@@ -295,27 +363,29 @@ export class AirConditionerPlatformAccessory {
 
     const airConditionerMode = targetHeatingCoolingStateToAirConditionerMode();
 
-    const commands = airConditionerMode ? [
-      {
-        capability: 'switch',
-        command: SwitchState.On,
-      },
-      {
-        capability: 'airConditionerMode',
-        command: 'setAirConditionerMode',
-        arguments: [airConditionerMode],
-      },
-    ] : [
-      {
-        capability: 'switch',
-        command: SwitchState.Off,
-      },
-    ];
+    const commands = airConditionerMode
+      ? [
+        {
+          capability: 'switch',
+          command: SwitchState.On,
+        },
+        {
+          capability: 'airConditionerMode',
+          command: 'setAirConditionerMode',
+          arguments: [airConditionerMode],
+        },
+      ]
+      : [
+        {
+          capability: 'switch',
+          command: SwitchState.Off,
+        },
+      ];
 
     const response = await fetch(this.commandURL, {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + this.platform.config.AccessToken,
+        Authorization: 'Bearer ' + this.platform.config.AccessToken,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ commands }),
@@ -339,7 +409,8 @@ export class AirConditionerPlatformAccessory {
     this.platform.log.debug('Triggered GET TargetTemperature');
 
     const deviceStatus = await this.getDeviceStatus();
-    const temperature = deviceStatus.thermostatCoolingSetpoint.coolingSetpoint.value;
+    const temperature =
+      deviceStatus.thermostatCoolingSetpoint.coolingSetpoint.value;
 
     return temperature;
   }
@@ -350,7 +421,7 @@ export class AirConditionerPlatformAccessory {
     const response = await fetch(this.commandURL, {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + this.platform.config.AccessToken,
+        Authorization: 'Bearer ' + this.platform.config.AccessToken,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -374,7 +445,7 @@ export class AirConditionerPlatformAccessory {
 
     const response = await fetch(this.statusURL, {
       headers: {
-        'Authorization': 'Bearer ' + this.platform.config.AccessToken,
+        Authorization: 'Bearer ' + this.platform.config.AccessToken,
       },
     });
 
